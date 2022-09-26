@@ -1,0 +1,400 @@
+﻿Build1=Default,anywheresoftware.b4a.samples.tabhost
+File1=ico1.png
+File10=page2.bal
+File11=page3.bal
+File12=perros1.jpg
+File13=perros2.jpg
+File14=transparente.png
+File2=ico2.png
+File3=ico3.png
+File4=imagenes-de-amor-12.jpg
+File5=imagenes-de-amor-nadie.jpg
+File6=info.png
+File7=main.bal
+File8=pag4.bal
+File9=page1.bal
+FileGroup1=Default Group
+FileGroup10=Default Group
+FileGroup11=Default Group
+FileGroup12=Default Group
+FileGroup13=Default Group
+FileGroup14=Default Group
+FileGroup2=Default Group
+FileGroup3=Default Group
+FileGroup4=Default Group
+FileGroup5=Default Group
+FileGroup6=Default Group
+FileGroup7=Default Group
+FileGroup8=Default Group
+FileGroup9=Default Group
+Group=Default Group
+IconFile=
+Library1=core
+Library2=sql
+Library3=dateutils
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="26" />~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+NumberOfFiles=14
+NumberOfLibraries=3
+NumberOfModules=0
+Version=8
+@EndOfDesignText@
+  #Region Module Attributes
+	#FullScreen: False
+	#IncludeTitle: True
+	#ApplicationLabel: Parquimetro
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: True
+#End Region
+
+Sub Process_Globals
+	Dim Mi_DB As SQL
+	Dim tmr As Timer
+End Sub
+
+Sub Globals
+	Dim TabHost1 As TabHost
+	Dim txtName, ExitText As EditText
+	Dim imageview1 As ImageView
+	Dim ListView1 As ListView
+	Dim Spinner1 As Spinner
+	Dim Mi_Cursor As Cursor
+	Dim ButtonBorrar, btnIngresar, btnDone As Button
+	Dim patente, patente2, ingreso, salida, horaI, fechaI, fechaS, horaS As String
+	Dim autorizado As Boolean
+	Dim cobro As Int
+	Dim rep As Int
+	DateTime.DateFormat = "dd-MM-yyyy HH:mm:ss"
+	Dim dt, dt2 As Long
+	Dim dg, tg As String
+	Dim Label4, Label5 As Label
+	Private Label7 As Label
+	Private statText As EditText
+	Private btnDone2 As Button
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	Activity.LoadLayout("main")
+	Dim bmp1, bmp2, bmp3, bmp4, bmp5  As Bitmap
+	bmp1 = LoadBitmap(File.DirAssets, "ico1.png")
+	bmp2 = LoadBitmap(File.DirAssets, "ico2.png")
+	bmp3 = LoadBitmap(File.DirAssets, "ico3.png")
+	bmp4 = LoadBitmap(File.DirAssets, "parking.png")
+	bmp5 = LoadBitmap(File.DirAssets, "stat.png")
+	
+	TabHost1.AddTabWithIcon ("", bmp1,bmp1, "page1") 'load the layout file of each page
+	TabHost1.AddTabWithIcon ("",bmp2,bmp2, "page2") 
+	TabHost1.AddTabWithIcon ("", bmp3 ,bmp3, "page3")
+	'TabHost1.AddTabWithIcon ("", bmp5 ,bmp5, "pag4")
+	
+	imageview1.SetBackgroundImage(bmp4)
+	
+	ListView1.SingleLineLayout.Label.TextSize = 18
+	ListView1.SingleLineLayout.ItemHeight = 300
+	
+	btnIngresar.Color = Colors.RGB(51, 204, 51)
+	ButtonBorrar.Color = Colors.RGB(255, 51, 0)
+	btnDone.Color = Colors.RGB(51, 204, 51)
+	
+	tmr.Initialize("tmr", 60000)
+	tmr.Enabled = True
+	
+	If FirstTime Then
+		'Inicialización de la base de datos
+		Mi_DB.Initialize(File.DirInternal,"Autos.db",True)
+		'Creación de una tabla
+		Mi_DB.BeginTransaction
+		Try
+			Mi_DB.ExecNonQuery("CREATE TABLE IF NOT EXISTS Mi_Tabla1 (id INTEGER PRIMARY KEY AUTOINCREMENT, patente TEXT, ingreso DATETIME, salida DATETIME, cobro INTEGER DEFAULT '0',  repetido INTEGER DEFAULT '0')")
+			Mi_DB.TransactionSuccessful
+			ToastMessageShow("Crea la base",True)
+		Catch
+			Log("ERROR de Creacion base de datos: "&LastException.Message)
+		End Try
+		Mi_DB.EndTransaction
+	End If
+	Spinner1.Add("Seleccione Filtro")
+	Spinner1.Add("Todos")
+	Spinner1.Add("Estacionados")
+	Spinner1.Add("Retirados")
+	dt2 = DateTime.now
+	dg = DateTime.Date(dt2).SubString2(0:10)
+	tg = DateTime.Time(dt2).SubString2(0:5)
+	Label4.Text = "Fecha: " & dg
+	Label5.Text ="Hora: " & tg
+End Sub
+Sub Activity_Pause (Finishing As Boolean)
+	
+End Sub
+Sub Activity_Resume
+
+End Sub
+
+Sub tmr_Tick
+	dt2 = DateTime.now
+	'Log(DateTime.Date(dt2))
+	dg = DateTime.Date(dt2).SubString2(0:10)
+	tg = DateTime.Time(dt2).SubString2(0:5)
+	Label4.Text = "Fecha: " & dg
+	Label5.Text = "Hora: " & tg
+End Sub
+
+'Sub btnNext1_Click
+'	TabHost1.CurrentTab = 1 'move to next tab
+'End Sub
+
+Sub btnDone_Click
+	Dim sal1 As String
+	Dim sal2 As String
+	Dim bmp5 As Bitmap
+	bmp5 = LoadBitmap(File.DirAssets, "parking2.png")
+	If ExitText.Text<>"" Then
+		patente2 = ExitText.Text.ToUpperCase
+		If Regex.IsMatch("^[A-Z]{4}[0-9]{2}|[A-Z]{2}[0-9]{4}$", patente2) = False Then
+			ToastMessageShow("Patente no válida", True)
+			Return
+		Else
+			Mi_Cursor=Mi_DB.ExecQuery("SELECT * FROM Mi_tabla1 WHERE patente = '" & patente2 & "' and salida IS '' ORDER BY id ASC")
+			If Mi_Cursor.RowCount>0 Then
+				For i=0 To Mi_Cursor.RowCount-1
+					Mi_Cursor.Position=i
+					'Log(Mi_Cursor.GetString("salida"))
+					dt = DateTime.now
+					sal1 = DateTime.Date(dt).SubString2(0:10)
+					sal2 = DateTime.Time(dt).SubString2(0:5)
+					Dim start As String = Mi_Cursor.GetString("ingreso")
+					Dim p As Period = DateUtils.PeriodBetween(DateTime.DateParse(start),dt)
+					'Log(p.Years&" Years, "&p.Months&" months, "&p.Days&" days" & " horas " & p.Hours & " minutos " & p.Minutes)
+					'Log(DateTime.Date(dt))
+					If p.Hours < 1 And p.Minutes < 15 Then
+						cobro = 500
+					Else
+						cobro = 500 + p.Minutes*30 + p.Hours*60*30 + p.Days*24*60*30
+					End If
+					Dim sb As StringBuilder
+					sb.Initialize
+					sb.Append("Ticket Parquimetro").Append(CRLF)	
+					sb.Append(CRLF)
+					sb.Append("Patente ").Append(Mi_Cursor.GetString("patente")).Append(CRLF)
+					sb.Append(CRLF)
+					sb.Append("Ingreso: ").Append(start.SubString2(0:10)).Append(CRLF)
+					sb.Append("A las: ").Append(start.SubString2(11:16)).Append(CRLF)
+					sb.Append(CRLF)
+					sb.Append("Salida: ").Append(sal1).Append(CRLF)
+					sb.Append("A las: ").Append(sal2).Append(CRLF)
+					sb.Append(CRLF)
+					sb.Append("Total a Pagar: $").Append(cobro).Append(CRLF)
+					Msgbox(sb.ToString, "")
+					'imageview1.Bitmap =LoadBitmap(File.DirAssets,"transparente.png")
+					Mi_DB.BeginTransaction
+					Try
+						Mi_DB.ExecNonQuery2("UPDATE Mi_tabla1 SET salida = ?, cobro = ? WHERE patente = ? AND cobro IS '0'", Array As String(DateTime.Date(dt), cobro, patente2))
+						Mi_DB.TransactionSuccessful
+						imageview1.SetBackgroundImage(bmp5)
+					Catch
+						Log("catch: " & LastException.Message)
+					End Try
+					Mi_DB.EndTransaction
+				Next
+			Else
+				ToastMessageShow("Patente no encontrada", True)
+				Return
+			End If
+		End If
+	Else
+		ToastMessageShow("Ingrese Patente", True)
+		Return
+	End If
+End Sub
+
+Sub TabHost1_TabChanged
+	Activity.Title = "Current Tab = " & TabHost1.CurrentTab
+	Dim bmp4 As Bitmap
+	bmp4 = LoadBitmap(File.DirAssets, "parking.png")
+	imageview1.SetBackgroundImage(bmp4)
+	If TabHost1.CurrentTab = 1 Then
+		Spinner1.SelectedIndex = Spinner1.IndexOf("Seleccione Filtro")
+		ListView1.Clear
+		Mi_Cursor=Mi_DB.ExecQuery("SELECT * FROM Mi_tabla1 ORDER BY id ASC")
+		If Mi_Cursor.RowCount>0 Then
+			'Se recorre el cursor para imprimir todos los datos de la tabla en el Listview
+			For i=0 To Mi_Cursor.RowCount-1
+				Mi_Cursor.Position=i
+				fechaI = Mi_Cursor.GetString("ingreso").SubString2(0:10)
+				horaI = Mi_Cursor.GetString("ingreso").SubString2(11:16)
+				fechaS = ""
+				horaS = ""
+				If Mi_Cursor.GetString("salida").Length > 0 Then
+					fechaS = Mi_Cursor.GetString("salida").SubString2(0:10)
+					horaS = Mi_Cursor.GetString("salida").SubString2(11:16)
+				End If
+				ListView1.AddSingleLine("Patente: " & Mi_Cursor.GetString("patente") & CRLF & "Ingreso: " &  fechaI & " a las: " & horaI & CRLF & "Salida: " & fechaS & " a las: " & horaS & CRLF & "Cobro: $" & Mi_Cursor.GetString("cobro") & CRLF & "Recurrencias: " & Mi_Cursor.GetString("repetido"))
+			Next
+		End If
+	End If
+	txtName.Text = ""
+	ExitText.Text = ""
+End Sub
+
+Sub ListView1_ItemClick (Position As Int, Value As Object)
+	
+End Sub
+
+Sub Spinner1_ItemClick (Position As Int, Value As Object)
+	ListView1.Clear
+	Mi_Cursor=Mi_DB.ExecQuery("SELECT * FROM Mi_tabla1 ORDER BY id ASC")
+	If Value = "Estacionados" Then
+		If Mi_Cursor.RowCount>0 Then
+			'Se recorre el cursor para imprimir todos los datos de la tabla en el Listview
+			For i=0 To Mi_Cursor.RowCount-1
+				Mi_Cursor.Position=i
+				fechaI = Mi_Cursor.GetString("ingreso").SubString2(0:10)
+				horaI = Mi_Cursor.GetString("ingreso").SubString2(11:16)
+				If Mi_Cursor.GetString("salida").Length = 0 Then
+					ListView1.AddSingleLine("Patente: " & Mi_Cursor.GetString("patente") & CRLF & "Ingreso: " &  fechaI & " a las: " & horaI & CRLF & "Recurrencias: " & Mi_Cursor.GetString("repetido"))
+				End If
+			Next
+		End If
+	End If
+	If Value = "Retirados" Then
+		If Mi_Cursor.RowCount>0 Then
+			'Se recorre el cursor para imprimir todos los datos de la tabla en el Listview
+			For i=0 To Mi_Cursor.RowCount-1
+				Mi_Cursor.Position=i
+				fechaI = Mi_Cursor.GetString("ingreso").SubString2(0:10)
+				horaI = Mi_Cursor.GetString("ingreso").SubString2(11:16)
+				If Mi_Cursor.GetString("salida").Length > 0 Then
+					fechaS = Mi_Cursor.GetString("salida").SubString2(0:10)
+					horaS = Mi_Cursor.GetString("salida").SubString2(11:16)
+					ListView1.AddSingleLine("Patente: " & Mi_Cursor.GetString("patente") & CRLF & "Ingreso: " &  fechaI & " a las: " & horaI & CRLF & "Salida: " & fechaS & " a las: " & horaS & CRLF & "Cobro: $" & Mi_Cursor.GetString("cobro") & CRLF & "Recurrencias: " & Mi_Cursor.GetString("repetido"))
+				End If
+			Next
+		End If
+	End If
+	If Value = "Todos" Then
+		If Mi_Cursor.RowCount>0 Then
+			'Se recorre el cursor para imprimir todos los datos de la tabla en el Listview
+			For i=0 To Mi_Cursor.RowCount-1
+				Mi_Cursor.Position=i
+				fechaI = Mi_Cursor.GetString("ingreso").SubString2(0:10)
+				horaI = Mi_Cursor.GetString("ingreso").SubString2(11:16)
+				fechaS = ""
+				horaS = ""
+				If Mi_Cursor.GetString("salida").Length > 0 Then
+					fechaS = Mi_Cursor.GetString("salida").SubString2(0:10)
+					horaS = Mi_Cursor.GetString("salida").SubString2(11:16)
+				End If
+				ListView1.AddSingleLine("Patente: " & Mi_Cursor.GetString("patente") & CRLF & "Ingreso: " &  fechaI & " a las: " & horaI & CRLF & "Salida: " & fechaS & " a las: " & horaS & CRLF & "Cobro: $" & Mi_Cursor.GetString("cobro") & CRLF & "Recurrencias: " & Mi_Cursor.GetString("repetido"))
+			Next
+		End If
+	End If
+End Sub
+
+Sub ButtonBorrar_Click
+	'Inicialización de la base de datos
+	Mi_DB.Initialize(File.DirInternal,"Autos.db",True)
+	'Creación de una tabla
+	Mi_DB.BeginTransaction
+	Try
+		Mi_DB.ExecNonQuery("DROP TABLE Mi_Tabla1")
+		Mi_DB.TransactionSuccessful
+		Msgbox ("Tabla Eliminada","Mensaje")
+	Catch
+		Log("ERROR de Creacion base de datos: "&LastException.Message)
+	End Try
+	Mi_DB.EndTransaction
+	Mi_DB.BeginTransaction
+	Try
+		Mi_DB.ExecNonQuery("CREATE TABLE IF NOT EXISTS Mi_Tabla1 (id INTEGER PRIMARY KEY AUTOINCREMENT, patente TEXT, ingreso DATETIME, salida DATETIME, cobro INTEGER DEFAULT '0', repetido INTEGER DEFAULT '0')")
+		Mi_DB.TransactionSuccessful
+		ToastMessageShow("Crea la base",True)
+	Catch
+		Log("ERROR de Creacion base de datos: "&LastException.Message)
+	End Try
+	Mi_DB.EndTransaction
+End Sub
+
+Sub btnIngresar_Click
+	If txtName.Text <> "" Then
+		'HACER VALIDACION AQUI
+		'1998-01-23 12:45:56'
+		patente = txtName.Text.ToUpperCase
+		If Regex.IsMatch("^[A-Z]{4}[0-9]{2}|[A-Z]{2}[0-9]{4}$", patente) = False Then
+			ToastMessageShow("Patente no válida", True)
+			Return
+		Else
+			autorizado = True
+			Mi_Cursor=Mi_DB.ExecQuery("SELECT * FROM Mi_tabla1 WHERE patente = '" & patente & "' ORDER BY id ASC")
+			If Mi_Cursor.RowCount>0 Then
+				For i=0 To Mi_Cursor.RowCount-1
+					Mi_Cursor.Position=i
+					If Not (Mi_Cursor.GetString("salida").Length > 0) Then
+						autorizado = False
+						ToastMessageShow("Vehículo ya ingresado", True)
+						Return
+					End If
+				Next
+			End If
+			rep = Mi_Cursor.RowCount+1
+			If autorizado Then
+				ingreso = DateTime.Date(dt2)
+				salida = ""
+				Mi_DB.BeginTransaction
+				Try
+					Mi_DB.ExecNonQuery2("INSERT INTO Mi_tabla1 (patente, ingreso, salida, repetido) VALUES (?,?,?,?)", Array As String(patente, ingreso, salida, rep))
+					Mi_DB.TransactionSuccessful
+					ToastMessageShow("Patente Ingresada Exitosamente", True)
+				Catch
+					Log("catch: " & LastException.Message)
+				End Try
+				Mi_DB.EndTransaction
+				ListView1.Clear
+				txtName.Text=""
+			End If
+		End If
+	Else
+		ToastMessageShow("Complete toda la información", True)
+		Return
+	End If
+End Sub
+
+Sub btnDone2_Click
+	Dim sal1 As Int
+	Dim sal2 As Int
+	Dim sal3 As String
+	If ExitText.Text<>"" Then
+		patente2 = ExitText.Text.ToUpperCase
+		If Regex.IsMatch("^[A-Z]{4}[0-9]{2}|[A-Z]{2}[0-9]{4}$", patente2) = False Then
+			ToastMessageShow("Patente no válida", True)
+			Return
+		Else
+			Mi_Cursor=Mi_DB.ExecQuery("SELECT SUM(cobro) as cobrototal FROM Mi_tabla1 WHERE patente = '" & patente2 & "' ORDER BY id ASC")
+			If Mi_Cursor.RowCount>0 Then
+				For i=0 To Mi_Cursor.RowCount-1
+					Mi_Cursor.Position=i
+					'sal3 = Mi_Cursor.GetString("patente")
+					sal2 = Mi_Cursor.GetString("cobrototal")
+					'Log(Mi_Cursor.GetString("salida"))
+					'imageview1.Bitmap =LoadBitmap(File.DirAssets,"transparente.png")
+				Next
+				Dim sb As StringBuilder
+				sb.Initialize
+				sb.Append("Estadistico Parquimetro").Append(CRLF)
+				sb.Append(CRLF)
+				sb.Append("Patente ").Append(patente2).Append(CRLF)
+				sb.Append(CRLF)
+				sb.Append("Recurrencias: ").Append(Mi_Cursor.RowCount+1).Append(CRLF)
+				sb.Append(CRLF)
+				sb.Append("Cobro Total: $").Append(sal2).Append(CRLF)
+				Msgbox(sb.ToString, "")
+			Else
+				ToastMessageShow("Patente no encontrada", True)
+				Return
+			End If
+		End If
+	Else
+		ToastMessageShow("Ingrese Patente", True)
+		Return
+	End If
+End Sub
